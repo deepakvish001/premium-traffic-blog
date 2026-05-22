@@ -57,7 +57,7 @@ export const adminSavePost = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await requireAdmin(context.userId);
 
-    const payload: Record<string, unknown> = {
+    const payload = {
       slug: data.slug,
       title: data.title,
       excerpt: data.excerpt ?? null,
@@ -67,15 +67,14 @@ export const adminSavePost = createServerFn({ method: "POST" })
       featured_image: data.featured_image ?? null,
       status: data.status,
       author_id: context.userId,
+      published_at:
+        data.status === "published" ? new Date().toISOString() : null,
     };
-    if (data.status === "published") {
-      payload.published_at = new Date().toISOString();
-    }
 
     if (data.id) {
       const { data: existing } = await supabaseAdmin
         .from("posts")
-        .select("status, published_at")
+        .select("published_at")
         .eq("id", data.id)
         .maybeSingle();
       if (existing?.published_at && data.status === "published") {

@@ -72,13 +72,14 @@ export const getPostBySlug = createServerFn({ method: "GET" })
     if (!post) return { post: null, related: [] as PostListItem[] };
 
     // Fire-and-forget view increment
-    await supabaseAdmin.rpc("noop").catch(() => {});
-    await supabaseAdmin
-      .from("posts")
-      .update({ view_count: ((post as { view_count?: number }).view_count ?? 0) + 1 })
-      .eq("id", (post as { id: string }).id)
-      .then(() => {})
-      .catch(() => {});
+    try {
+      await supabaseAdmin
+        .from("posts")
+        .update({ view_count: ((post as { view_count?: number }).view_count ?? 0) + 1 })
+        .eq("id", (post as { id: string }).id);
+    } catch {
+      // ignore
+    }
 
     const categoryId = (post as { category: { slug: string } | null }).category;
     let related: PostListItem[] = [];
