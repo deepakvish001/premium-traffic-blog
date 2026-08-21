@@ -62,7 +62,7 @@ export const getPostBySlug = createServerFn({ method: "GET" })
       .from("posts")
       .select(`
         id, slug, title, excerpt, featured_image, published_at, updated_at,
-        content, meta_description,
+        content, meta_description, category_id,
         category:categories ( slug, name )
       `)
       .eq("slug", data.slug)
@@ -81,13 +81,14 @@ export const getPostBySlug = createServerFn({ method: "GET" })
       // ignore
     }
 
-    const categoryId = (post as { category: { slug: string } | null }).category;
+    const categoryId = (post as { category_id: string | null }).category_id;
     let related: PostListItem[] = [];
     if (categoryId) {
       const { data: rel } = await supabaseAdmin
         .from("posts")
         .select(POST_LIST_SELECT)
         .eq("status", "published")
+        .eq("category_id", categoryId)
         .neq("slug", data.slug)
         .order("published_at", { ascending: false })
         .limit(3);
